@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PosnetItem = void 0;
+exports.PosnetEndTransaction = exports.PosnetChange = exports.PosnetPayment = exports.PosnetItem = void 0;
+var utils_1 = require("./utils");
 /**
  * name: Name of goods - Up to 40 characters
  * vat: VAT rate - Rate number provided (0 - 6)
@@ -34,3 +35,40 @@ var PosnetItem = /** @class */ (function () {
     return PosnetItem;
 }());
 exports.PosnetItem = PosnetItem;
+var PosnetPayment = /** @class */ (function () {
+    function PosnetPayment(args) {
+        if (utils_1.PaymentTypes[args.type] === undefined)
+            throw Error('Posnet: Payment type is not valid');
+        this.type = utils_1.PaymentTypes[args.type];
+        this.amount = args.amount;
+        this.change = args.change;
+        this.form = args.form;
+        this.flag = args.flag;
+    }
+    return PosnetPayment;
+}());
+exports.PosnetPayment = PosnetPayment;
+var PosnetChange = /** @class */ (function () {
+    function PosnetChange(type, amount) {
+        if (utils_1.PaymentTypes[type] === undefined)
+            throw Error('Posnet: Payment type is not valid');
+        this.amount = amount;
+        this.type = utils_1.PaymentTypes[type];
+    }
+    return PosnetChange;
+}());
+exports.PosnetChange = PosnetChange;
+/**
+ * @param {number} subtotal: fiscal sum of all goods
+ * @param {number} paid: amount paid
+ * @param {number} change: amount of change
+ */
+var PosnetEndTransaction = /** @class */ (function () {
+    function PosnetEndTransaction(subtotal, paid, change) {
+        this.subtotal = subtotal;
+        this.paid = paid;
+        this.change = change;
+    }
+    return PosnetEndTransaction;
+}());
+exports.PosnetEndTransaction = PosnetEndTransaction;

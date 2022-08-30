@@ -3,7 +3,7 @@ import { SerialPort } from "serialport";
 import * as dayjs from 'dayjs'
 import { errors } from "./errors"
 import { crc16_ccitt } from "./utils"
-import type { PosnetItem } from './interfaces';
+import type { PosnetChange, PosnetEndTransaction, PosnetItem, PosnetPayment } from './interfaces';
 
 const STX = 0x02
 const ETX = 0x03
@@ -70,6 +70,72 @@ export class Posnet extends EventEmitter {
     }
 
     /**
+     * @description Print payment for transaction.
+     * @param { PosnetPayment } payment
+     * @returns { Posnet }
+     */
+    printPayment(payment: PosnetPayment): Posnet {
+        const bufferData: Array<Buffer> = [
+            Buffer.from('trpayment', 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from(`ty${payment.type}`, 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from(`wa${payment.amount * 100}`, 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from('re0', 'ascii'),
+            Buffer.from([TAB]),
+        ];
+
+        this.send(Buffer.concat(bufferData));
+
+        return this;
+    }
+
+    /**
+     * @description Print change
+     * @param {PosnetChange} change 
+     * @returns 
+     */
+    printChange(change: PosnetChange) {
+        if (!this.transactionInited) throw Error('Transaction is not inited');
+        const bufferData: Array<Buffer> = [
+            Buffer.from('trpayment', 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from(`ty${change.type}`, 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from(`wa${change.amount * 100}`, 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from('re1', 'ascii'),
+            Buffer.from([TAB]),
+        ];
+        this.send(Buffer.concat(bufferData));
+
+        return this;
+    }
+
+    /**
+     * @description End of transaction.
+     * @param {PosnetEndTransaction} transaction
+     * @returns {Posnet}
+     */
+    endTransaction(transaction: PosnetEndTransaction): Posnet {
+        const bufferData: Array<Buffer> = [
+            Buffer.from('trend', 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from(`to${transaction.subtotal * 100}`, 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from(`re${transaction.change * 100}`, 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from(`fp${transaction.paid * 100}`, 'ascii'),
+            Buffer.from([TAB]),
+        ];
+
+        this.send(Buffer.concat(bufferData));
+
+        return this;
+    }
+
+    /**
      * @description Print item on receipt. Should be used after initTransaction()
      * @param { PosnetItem } item
      * @returns { Posnet }
@@ -94,12 +160,11 @@ export class Posnet extends EventEmitter {
             Buffer.from([TAB]),
             Buffer.from(`vt${item.vat}`, 'ascii'),
             Buffer.from([TAB]),
-            Buffer.from(`pr${item.price}`, 'ascii'),
+            Buffer.from(`pr${item.price * 100}`, 'ascii'),
             Buffer.from([TAB]),
-            Buffer.from(`rd${item.discountType === null ? true : item.discountType}`, 'ascii'),
-            Buffer.from([TAB])
         ];
-
+        
+        if (item.discountType) bufferData.push(Buffer.from(`rd${item.discountType === null ? true : item.discountType}`, 'ascii'), Buffer.from([TAB]))
         if (item.cancellationFlag) bufferData.push(Buffer.from(`st${item.cancellationFlag}`, 'ascii'), Buffer.from([TAB]))
         if (item.totalAmount) bufferData.push(Buffer.from(`wa${item.totalAmount}`, 'ascii'), Buffer.from([TAB]))
         if (item.qty) bufferData.push(Buffer.from(`il${item.qty}`, 'ascii'), Buffer.from([TAB]))
@@ -118,6 +183,7 @@ export class Posnet extends EventEmitter {
      */
     initTransaction(): Posnet {
         // [STX]trinit[TAB]bm0[TAB]#CRC16[ETX]
+        this.cancel();
         this.send(
             Buffer.concat([
                 Buffer.from('trinit', 'ascii'),
@@ -126,6 +192,7 @@ export class Posnet extends EventEmitter {
                 Buffer.from([TAB]),
             ])
         )
+        this.transactionInited = true;
 
         return this;
     }
@@ -186,7 +253,23 @@ export class Posnet extends EventEmitter {
             console.log('Posnet: Data send >>>>>>> : ', buffer.toString('utf-8'));
         }
 
-        this.port.write(buffer)
+        this.port.write(data)
+    }
+
+    /**
+     * @description Create promise to make module sync
+     * @param { Buffer } buffer
+     * @returns {Promise<void>}
+     */
+    getPromise(data: Buffer): Promise<any> {
+        return new Promise((resolve, reject) => {
+            if (!this.port) throw Error('Port is not open');
+
+            this.port.write(data)
+            this.port.drain(() => {
+                resolve(true);
+            })
+        })
     }
 
     /**

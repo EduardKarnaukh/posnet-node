@@ -1,3 +1,5 @@
+import { PaymentTypes } from './utils';
+
 /**
  * name: Name of goods - Up to 40 characters
  * vat: VAT rate - Rate number provided (0 - 6)
@@ -55,4 +57,56 @@ export interface PosnetItemArgs {
     discountName?: string;
     percentDiscount?: number;
     amountDiscount?: number;
+}
+
+export interface PosnetPaymentArgs {
+    type: number;
+    amount: number;
+    change: number;
+    form?: string;
+    flag?: boolean;
+}
+
+export class PosnetPayment {
+    type: number;
+    amount: number;
+    change: number;
+    form?: string;
+    flag?: boolean;
+
+    constructor(args: PosnetPaymentArgs) {
+        if (PaymentTypes[args.type] === undefined) throw Error('Posnet: Payment type is not valid');
+        this.type = PaymentTypes[args.type];
+        this.amount = args.amount;
+        this.change = args.change;
+        this.form = args.form;
+        this.flag = args.flag;
+    }
+}
+
+export class PosnetChange {
+    amount: number;
+    type: number;
+    constructor(type: string, amount: number) {
+        if (PaymentTypes[type] === undefined) throw Error('Posnet: Payment type is not valid');
+        this.amount = amount;
+        this.type = PaymentTypes[type];
+    }
+}
+
+/**
+ * @param {number} subtotal: fiscal sum of all goods
+ * @param {number} paid: amount paid
+ * @param {number} change: amount of change
+ */
+export class PosnetEndTransaction {
+    subtotal: number;
+    paid: number;
+    change: number;
+    
+    constructor(subtotal: number, paid: number, change: number) {
+        this.subtotal = subtotal;
+        this.paid = paid;
+        this.change = change;
+    }
 }

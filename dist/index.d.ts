@@ -2,7 +2,7 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
 import { SerialPort } from "serialport";
-import type { PosnetItem } from './interfaces';
+import type { PosnetChange, PosnetEndTransaction, PosnetItem, PosnetPayment } from './interfaces';
 export declare class Posnet extends EventEmitter {
     debug: boolean;
     eventEmitter: EventEmitter;
@@ -15,6 +15,24 @@ export declare class Posnet extends EventEmitter {
      * @returns { Posnet }
      */
     open(port: string): Promise<boolean>;
+    /**
+     * @description Print payment for transaction.
+     * @param { PosnetPayment } payment
+     * @returns { Posnet }
+     */
+    printPayment(payment: PosnetPayment): Posnet;
+    /**
+     * @description Print change
+     * @param {PosnetChange} change
+     * @returns
+     */
+    printChange(change: PosnetChange): this;
+    /**
+     * @description End of transaction.
+     * @param {PosnetEndTransaction} transaction
+     * @returns {Posnet}
+     */
+    endTransaction(transaction: PosnetEndTransaction): Posnet;
     /**
      * @description Print item on receipt. Should be used after initTransaction()
      * @param { PosnetItem } item

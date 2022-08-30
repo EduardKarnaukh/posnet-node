@@ -41,3 +41,34 @@ export interface PosnetItemArgs {
     percentDiscount?: number;
     amountDiscount?: number;
 }
+export interface PosnetPaymentArgs {
+    type: number;
+    amount: number;
+    change: number;
+    form?: string;
+    flag?: boolean;
+}
+export declare class PosnetPayment {
+    type: number;
+    amount: number;
+    change: number;
+    form?: string;
+    flag?: boolean;
+    constructor(args: PosnetPaymentArgs);
+}
+export declare class PosnetChange {
+    amount: number;
+    type: number;
+    constructor(type: string, amount: number);
+}
+/**
+ * @param {number} subtotal: fiscal sum of all goods
+ * @param {number} paid: amount paid
+ * @param {number} change: amount of change
+ */
+export declare class PosnetEndTransaction {
+    subtotal: number;
+    paid: number;
+    change: number;
+    constructor(subtotal: number, paid: number, change: number);
+}

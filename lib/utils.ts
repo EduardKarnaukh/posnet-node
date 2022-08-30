@@ -48,3 +48,18 @@ export function crc16_ccitt(data: Buffer): number {
 
     return ((high << 8) | low)
 }
+
+export interface PaymentType {
+    [key: string]: number;
+}
+
+export const PaymentTypes: PaymentType = {
+    'cash': 0,
+    'cars': 2,
+    'check': 3,
+    'gift_voucher': 4,
+    'credit': 5,
+    'other': 6,
+    'voucher': 7,
+    'client_account': 8
+}

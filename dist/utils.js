@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.crc16_ccitt = void 0;
+exports.PaymentTypes = exports.crc16_ccitt = void 0;
 var crc16H = [
     0x00, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x81, 0x91, 0xa1, 0xb1, 0xc1, 0xd1, 0xe1, 0xf1,
     0x12, 0x02, 0x32, 0x22, 0x52, 0x42, 0x72, 0x62, 0x93, 0x83, 0xb3, 0xa3, 0xd3, 0xc3, 0xf3, 0xe3,
@@ -49,3 +49,13 @@ function crc16_ccitt(data) {
     return ((high << 8) | low);
 }
 exports.crc16_ccitt = crc16_ccitt;
+exports.PaymentTypes = {
+    'cash': 0,
+    'cars': 2,
+    'check': 3,
+    'gift_voucher': 4,
+    'credit': 5,
+    'other': 6,
+    'voucher': 7,
+    'client_account': 8
+};

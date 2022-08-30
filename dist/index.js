@@ -80,6 +80,65 @@ var Posnet = /** @class */ (function (_super) {
         });
     };
     /**
+     * @description Print payment for transaction.
+     * @param { PosnetPayment } payment
+     * @returns { Posnet }
+     */
+    Posnet.prototype.printPayment = function (payment) {
+        var bufferData = [
+            Buffer.from('trpayment', 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from("ty".concat(payment.type), 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from("wa".concat(payment.amount * 100), 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from('re0', 'ascii'),
+            Buffer.from([TAB]),
+        ];
+        this.send(Buffer.concat(bufferData));
+        return this;
+    };
+    /**
+     * @description Print change
+     * @param {PosnetChange} change
+     * @returns
+     */
+    Posnet.prototype.printChange = function (change) {
+        if (!this.transactionInited)
+            throw Error('Transaction is not inited');
+        var bufferData = [
+            Buffer.from('trpayment', 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from("ty".concat(change.type), 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from("wa".concat(change.amount * 100), 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from('re1', 'ascii'),
+            Buffer.from([TAB]),
+        ];
+        this.send(Buffer.concat(bufferData));
+        return this;
+    };
+    /**
+     * @description End of transaction.
+     * @param {PosnetEndTransaction} transaction
+     * @returns {Posnet}
+     */
+    Posnet.prototype.endTransaction = function (transaction) {
+        var bufferData = [
+            Buffer.from('trend', 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from("to".concat(transaction.subtotal * 100), 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from("re".concat(transaction.change * 100), 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from("fp".concat(transaction.paid * 100), 'ascii'),
+            Buffer.from([TAB]),
+        ];
+        this.send(Buffer.concat(bufferData));
+        return this;
+    };
+    /**
      * @description Print item on receipt. Should be used after initTransaction()
      * @param { PosnetItem } item
      * @returns { Posnet }
@@ -106,11 +165,11 @@ var Posnet = /** @class */ (function (_super) {
             Buffer.from([TAB]),
             Buffer.from("vt".concat(item.vat), 'ascii'),
             Buffer.from([TAB]),
-            Buffer.from("pr".concat(item.price), 'ascii'),
+            Buffer.from("pr".concat(item.price * 100), 'ascii'),
             Buffer.from([TAB]),
-            Buffer.from("rd".concat(item.discountType === null ? true : item.discountType), 'ascii'),
-            Buffer.from([TAB])
         ];
+        if (item.discountType)
+            bufferData.push(Buffer.from("rd".concat(item.discountType === null ? true : item.discountType), 'ascii'), Buffer.from([TAB]));
         if (item.cancellationFlag)
             bufferData.push(Buffer.from("st".concat(item.cancellationFlag), 'ascii'), Buffer.from([TAB]));
         if (item.totalAmount)
@@ -134,12 +193,14 @@ var Posnet = /** @class */ (function (_super) {
      */
     Posnet.prototype.initTransaction = function () {
         // [STX]trinit[TAB]bm0[TAB]#CRC16[ETX]
+        this.cancel();
         this.send(Buffer.concat([
             Buffer.from('trinit', 'ascii'),
             Buffer.from([TAB]),
             Buffer.from('bm0', 'ascii'),
             Buffer.from([TAB]),
         ]));
+        this.transactionInited = true;
         return this;
     };
     /**

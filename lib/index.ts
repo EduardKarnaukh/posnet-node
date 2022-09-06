@@ -3,7 +3,7 @@ import { SerialPort } from "serialport";
 import * as dayjs from 'dayjs'
 import { errors } from "./errors"
 import { crc16_ccitt } from "./utils"
-import type { PosnetChange, PosnetEndTransaction, PosnetItem, PosnetPayment } from './interfaces';
+import type { PosnetChange, PosnetEndTransaction, PosnetItem, PosnetPayment, PosnetPromoDiscount, PosnetDiscountVat } from './interfaces';
 
 const STX = 0x02
 const ETX = 0x03
@@ -147,6 +147,49 @@ export class Posnet extends EventEmitter {
                 Buffer.from('cm1', 'ascii'),
                 Buffer.from([TAB]),
             ])
+        );
+
+        return this;
+    }
+
+    printPromoDiscount(discount: PosnetPromoDiscount): Posnet {
+        if (!this.transactionInited) throw Error('Transaction is not inited');
+        this.send(
+            Buffer.concat([
+                Buffer.from('trdiscntpromo', 'ascii'),
+                Buffer.from([TAB]), 
+                Buffer.from(`rw${discount.value * 100}`, 'ascii'),
+                Buffer.from([TAB]), 
+                Buffer.from(`vt${discount.vat}`, 'ascii'),
+                Buffer.from([TAB]), 
+                Buffer.from(`na${discount.name}`, 'ascii'),
+                Buffer.from([TAB]), 
+            ])
+        );
+        return this;
+    }
+
+    printDiscountVat(discount: PosnetDiscountVat): Posnet {
+        if (!this.transactionInited) throw Error('Transaction is not inited');
+        const data = [
+            Buffer.from('trdiscntvat', 'ascii'),
+            Buffer.from([TAB]), 
+            Buffer.from(`vt${discount.vat}`, 'ascii'),
+            Buffer.from([TAB]), 
+            Buffer.from(`na${discount.name}`, 'ascii'),
+            Buffer.from([TAB]), 
+        ];
+
+        if (discount.valueInPercent) {
+            data.push(Buffer.from(`rp${discount.value}`, 'ascii'));
+            data.push(Buffer.from([TAB]));
+        } else {
+            data.push(Buffer.from(`rw${discount.value * 100}`, 'ascii'));
+            data.push(Buffer.from([TAB]));
+        }
+
+        this.send(
+            Buffer.concat(data)
         );
 
         return this;

@@ -147,6 +147,43 @@ var Posnet = /** @class */ (function (_super) {
         ]));
         return this;
     };
+    Posnet.prototype.printPromoDiscount = function (discount) {
+        if (!this.transactionInited)
+            throw Error('Transaction is not inited');
+        this.send(Buffer.concat([
+            Buffer.from('trdiscntpromo', 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from("rw".concat(discount.value * 100), 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from("vt".concat(discount.vat), 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from("na".concat(discount.name), 'ascii'),
+            Buffer.from([TAB]),
+        ]));
+        return this;
+    };
+    Posnet.prototype.printDiscountVat = function (discount) {
+        if (!this.transactionInited)
+            throw Error('Transaction is not inited');
+        var data = [
+            Buffer.from('trdiscntvat', 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from("vt".concat(discount.vat), 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from("na".concat(discount.name), 'ascii'),
+            Buffer.from([TAB]),
+        ];
+        if (discount.valueInPercent) {
+            data.push(Buffer.from("rp".concat(discount.value), 'ascii'));
+            data.push(Buffer.from([TAB]));
+        }
+        else {
+            data.push(Buffer.from("rw".concat(discount.value * 100), 'ascii'));
+            data.push(Buffer.from([TAB]));
+        }
+        this.send(Buffer.concat(data));
+        return this;
+    };
     /**
      * @description Print text. Form should be started
      * @param {string} text

@@ -2,7 +2,7 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
 import { SerialPort } from "serialport";
-import type { PosnetChange, PosnetEndTransaction, PosnetItem, PosnetPayment } from './interfaces';
+import type { PosnetChange, PosnetEndTransaction, PosnetItem, PosnetPayment, PosnetPromoDiscount, PosnetDiscountVat } from './interfaces';
 export declare class Posnet extends EventEmitter {
     debug: boolean;
     eventEmitter: EventEmitter;
@@ -37,6 +37,8 @@ export declare class Posnet extends EventEmitter {
      * @returns { Posnet }
      */
     printDotLine(): Posnet;
+    printPromoDiscount(discount: PosnetPromoDiscount): Posnet;
+    printDiscountVat(discount: PosnetDiscountVat): Posnet;
     /**
      * @description Print text. Form should be started
      * @param {string} text

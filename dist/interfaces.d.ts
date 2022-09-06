@@ -72,3 +72,16 @@ export declare class PosnetEndTransaction {
     change: number;
     constructor(subtotal: number, paid: number, change: number);
 }
+export declare class PosnetPromoDiscount {
+    vat: number;
+    value: number;
+    name: string;
+    constructor(vat: number, value: number, name: string);
+}
+export declare class PosnetDiscountVat {
+    vat: number;
+    value: number;
+    valueInPercent: boolean;
+    name: string;
+    constructor(vat: number, name: string, value: number, valueInPercent?: boolean);
+}

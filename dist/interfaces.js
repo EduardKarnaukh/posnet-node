@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PosnetEndTransaction = exports.PosnetChange = exports.PosnetPayment = exports.PosnetItem = void 0;
+exports.PosnetDiscountVat = exports.PosnetPromoDiscount = exports.PosnetEndTransaction = exports.PosnetChange = exports.PosnetPayment = exports.PosnetItem = void 0;
 var utils_1 = require("./utils");
 /**
  * name: Name of goods - Up to 40 characters
@@ -72,3 +72,23 @@ var PosnetEndTransaction = /** @class */ (function () {
     return PosnetEndTransaction;
 }());
 exports.PosnetEndTransaction = PosnetEndTransaction;
+var PosnetPromoDiscount = /** @class */ (function () {
+    function PosnetPromoDiscount(vat, value, name) {
+        this.vat = vat;
+        this.value = value;
+        this.name = name;
+    }
+    return PosnetPromoDiscount;
+}());
+exports.PosnetPromoDiscount = PosnetPromoDiscount;
+var PosnetDiscountVat = /** @class */ (function () {
+    function PosnetDiscountVat(vat, name, value, valueInPercent) {
+        if (valueInPercent === void 0) { valueInPercent = false; }
+        this.vat = vat;
+        this.value = value;
+        this.valueInPercent = valueInPercent;
+        this.name = name;
+    }
+    return PosnetDiscountVat;
+}());
+exports.PosnetDiscountVat = PosnetDiscountVat;

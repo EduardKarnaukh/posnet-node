@@ -110,3 +110,29 @@ export class PosnetEndTransaction {
         this.change = change;
     }
 }
+
+export class PosnetPromoDiscount {
+    vat: number;
+    value: number;
+    name: string;
+
+    constructor(vat: number, value: number, name: string) {
+        this.vat = vat;
+        this.value = value;
+        this.name = name;
+    }
+}
+
+export class PosnetDiscountVat {
+    vat: number;
+    value: number;
+    valueInPercent: boolean;
+    name: string;
+
+    constructor(vat: number, name:string, value: number, valueInPercent: boolean = false) {
+        this.vat = vat;
+        this.value = value;
+        this.valueInPercent = valueInPercent;
+        this.name = name;
+    }
+}

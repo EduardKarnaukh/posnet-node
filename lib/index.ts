@@ -8,12 +8,15 @@ import type { PosnetChange, PosnetEndTransaction, PosnetItem, PosnetPayment } fr
 const STX = 0x02
 const ETX = 0x03
 const TAB = 0x09
+const FMT = 'fn200'
+const LF = 0xA
 
 export class Posnet extends EventEmitter {
     debug = false;
     eventEmitter = new EventEmitter();
     port?: SerialPort;
     transactionInited: boolean = false;
+    formStarted: boolean =  false;
 
     constructor(debug: boolean = false) {
         super();
@@ -70,11 +73,119 @@ export class Posnet extends EventEmitter {
     }
 
     /**
+     * @description Start form for non-fiscal print
+     * @returns { Posnet }
+     */
+    startForm(): Posnet {
+        this.send(
+            Buffer.concat([
+                Buffer.from('formstart', 'ascii'),
+                Buffer.from([TAB]),
+                Buffer.from(FMT, 'ascii'),
+                Buffer.from([TAB]),
+                Buffer.from('fh75', 'ascii'),
+                Buffer.from([TAB])
+            ])
+        )
+        this.formStarted = true;
+
+        return this;
+    }
+
+    /**
+     * @description non-fiscal form end
+     * @returns {Posnet}
+     */
+    endForm(): Posnet {
+        this.send(
+            Buffer.concat([
+                Buffer.from('formend', 'ascii'),
+                Buffer.from([TAB]),
+                Buffer.from(FMT, 'ascii'),
+                Buffer.from([TAB])
+            ])
+        )
+        this.formStarted = false;
+
+        return this;
+    }
+
+    /**
+     * @description Print barcode. Form should be started
+     * @param barcode 
+     * @returns 
+     */
+    printBarcode(barcode: string): Posnet {
+        if (!this.formStarted) throw Error('Form is not started');
+        this.send(
+            Buffer.concat([
+                Buffer.from('formbarcode', 'ascii'),
+                Buffer.from([TAB]), 
+                Buffer.from('fn200', 'ascii'),
+                Buffer.from([TAB]), 
+                Buffer.from(`bc${barcode}`, 'ascii'),
+                Buffer.from([TAB]),
+            ])
+        );
+
+        return this;
+    }
+
+
+    /**
+     * @description Print dots line. Form should be started
+     * @returns { Posnet }
+     */
+    printDotLine(): Posnet {
+        if (!this.formStarted) throw Error('Form is not started');
+        this.send(
+            Buffer.concat([
+                Buffer.from('formcmd', 'ascii'),
+                Buffer.from([TAB]), 
+                Buffer.from('fn200', 'ascii'),
+                Buffer.from([TAB]), 
+                Buffer.from('cm1', 'ascii'),
+                Buffer.from([TAB]),
+            ])
+        );
+
+        return this;
+    }
+
+    /**
+     * @description Print text. Form should be started
+     * @param {string} text 
+     * @returns 
+     */
+    printText(text: string): Posnet {
+        if (!this.formStarted) throw Error('Form is not started');
+        this.send(
+            Buffer.concat([
+                Buffer.from('formline', 'ascii'),
+                Buffer.from([TAB]), 
+                Buffer.from(FMT, 'ascii'),
+                Buffer.from([TAB]), 
+                Buffer.from('fl664', 'ascii'),
+                Buffer.from([TAB]),
+                Buffer.from('s1', 'ascii'),
+                Buffer.from(text, 'ascii'),
+                Buffer.from([LF]),
+                Buffer.from([TAB]),
+            ])
+        );
+
+        return this;
+    }
+
+
+    /**
      * @description Print payment for transaction.
      * @param { PosnetPayment } payment
      * @returns { Posnet }
      */
     printPayment(payment: PosnetPayment): Posnet {
+        if (!this.transactionInited) throw Error('Transaction is not inited');
+
         const bufferData: Array<Buffer> = [
             Buffer.from('trpayment', 'ascii'),
             Buffer.from([TAB]),
@@ -98,6 +209,7 @@ export class Posnet extends EventEmitter {
      */
     printChange(change: PosnetChange) {
         if (!this.transactionInited) throw Error('Transaction is not inited');
+
         const bufferData: Array<Buffer> = [
             Buffer.from('trpayment', 'ascii'),
             Buffer.from([TAB]),
@@ -119,6 +231,8 @@ export class Posnet extends EventEmitter {
      * @returns {Posnet}
      */
     endTransaction(transaction: PosnetEndTransaction): Posnet {
+        if (!this.transactionInited) throw Error('Transaction is not inited');
+
         const bufferData: Array<Buffer> = [
             Buffer.from('trend', 'ascii'),
             Buffer.from([TAB]),
@@ -182,7 +296,6 @@ export class Posnet extends EventEmitter {
      * @returns { Posnet }
      */
     initTransaction(): Posnet {
-        // [STX]trinit[TAB]bm0[TAB]#CRC16[ETX]
         this.cancel();
         this.send(
             Buffer.concat([
@@ -203,7 +316,6 @@ export class Posnet extends EventEmitter {
      * @return {Posnet}
      */
     daylyReport(date: string = dayjs().format('YYYY-MM-DD')): Posnet {
-        // [STX]dailyrep[TAB]da2007-02-19[TAB]#CRC16[ETX]
         this.send(
             Buffer.concat([
                 Buffer.from('dailyrep', 'ascii'),
@@ -221,7 +333,6 @@ export class Posnet extends EventEmitter {
      * @returns {Posnet}
      */
     cancel(): Posnet {
-        // [STX]prncancel[TAB]#CRC16[ETX]
         this.send(
             Buffer.concat([
                 Buffer.from('prncancel', 'ascii'),
@@ -253,7 +364,7 @@ export class Posnet extends EventEmitter {
             console.log('Posnet: Data send >>>>>>> : ', buffer.toString('utf-8'));
         }
 
-        this.port.write(data)
+        this.port.write(buffer);
     }
 
     /**

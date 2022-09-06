@@ -24,6 +24,8 @@ var utils_1 = require("./utils");
 var STX = 0x02;
 var ETX = 0x03;
 var TAB = 0x09;
+var FMT = 'fn200';
+var LF = 0xA;
 var Posnet = /** @class */ (function (_super) {
     __extends(Posnet, _super);
     function Posnet(debug) {
@@ -32,6 +34,7 @@ var Posnet = /** @class */ (function (_super) {
         _this.debug = false;
         _this.eventEmitter = new events_1.EventEmitter();
         _this.transactionInited = false;
+        _this.formStarted = false;
         _this.debug = debug;
         return _this;
     }
@@ -80,11 +83,100 @@ var Posnet = /** @class */ (function (_super) {
         });
     };
     /**
+     * @description Start form for non-fiscal print
+     * @returns { Posnet }
+     */
+    Posnet.prototype.startForm = function () {
+        this.send(Buffer.concat([
+            Buffer.from('formstart', 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from(FMT, 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from('fh75', 'ascii'),
+            Buffer.from([TAB])
+        ]));
+        this.formStarted = true;
+        return this;
+    };
+    /**
+     * @description non-fiscal form end
+     * @returns {Posnet}
+     */
+    Posnet.prototype.endForm = function () {
+        this.send(Buffer.concat([
+            Buffer.from('formend', 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from(FMT, 'ascii'),
+            Buffer.from([TAB])
+        ]));
+        this.formStarted = false;
+        return this;
+    };
+    /**
+     * @description Print barcode. Form should be started
+     * @param barcode
+     * @returns
+     */
+    Posnet.prototype.printBarcode = function (barcode) {
+        if (!this.formStarted)
+            throw Error('Form is not started');
+        this.send(Buffer.concat([
+            Buffer.from('formbarcode', 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from('fn200', 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from("bc".concat(barcode), 'ascii'),
+            Buffer.from([TAB]),
+        ]));
+        return this;
+    };
+    /**
+     * @description Print dots line. Form should be started
+     * @returns { Posnet }
+     */
+    Posnet.prototype.printDotLine = function () {
+        if (!this.formStarted)
+            throw Error('Form is not started');
+        this.send(Buffer.concat([
+            Buffer.from('formcmd', 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from('fn200', 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from('cm1', 'ascii'),
+            Buffer.from([TAB]),
+        ]));
+        return this;
+    };
+    /**
+     * @description Print text. Form should be started
+     * @param {string} text
+     * @returns
+     */
+    Posnet.prototype.printText = function (text) {
+        if (!this.formStarted)
+            throw Error('Form is not started');
+        this.send(Buffer.concat([
+            Buffer.from('formline', 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from(FMT, 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from('fl664', 'ascii'),
+            Buffer.from([TAB]),
+            Buffer.from('s1', 'ascii'),
+            Buffer.from(text, 'ascii'),
+            Buffer.from([LF]),
+            Buffer.from([TAB]),
+        ]));
+        return this;
+    };
+    /**
      * @description Print payment for transaction.
      * @param { PosnetPayment } payment
      * @returns { Posnet }
      */
     Posnet.prototype.printPayment = function (payment) {
+        if (!this.transactionInited)
+            throw Error('Transaction is not inited');
         var bufferData = [
             Buffer.from('trpayment', 'ascii'),
             Buffer.from([TAB]),
@@ -125,6 +217,8 @@ var Posnet = /** @class */ (function (_super) {
      * @returns {Posnet}
      */
     Posnet.prototype.endTransaction = function (transaction) {
+        if (!this.transactionInited)
+            throw Error('Transaction is not inited');
         var bufferData = [
             Buffer.from('trend', 'ascii'),
             Buffer.from([TAB]),
@@ -192,7 +286,6 @@ var Posnet = /** @class */ (function (_super) {
      * @returns { Posnet }
      */
     Posnet.prototype.initTransaction = function () {
-        // [STX]trinit[TAB]bm0[TAB]#CRC16[ETX]
         this.cancel();
         this.send(Buffer.concat([
             Buffer.from('trinit', 'ascii'),
@@ -210,7 +303,6 @@ var Posnet = /** @class */ (function (_super) {
      */
     Posnet.prototype.daylyReport = function (date) {
         if (date === void 0) { date = dayjs().format('YYYY-MM-DD'); }
-        // [STX]dailyrep[TAB]da2007-02-19[TAB]#CRC16[ETX]
         this.send(Buffer.concat([
             Buffer.from('dailyrep', 'ascii'),
             Buffer.from([TAB]),
@@ -224,7 +316,6 @@ var Posnet = /** @class */ (function (_super) {
      * @returns {Posnet}
      */
     Posnet.prototype.cancel = function () {
-        // [STX]prncancel[TAB]#CRC16[ETX]
         this.send(Buffer.concat([
             Buffer.from('prncancel', 'ascii'),
             Buffer.from([TAB])
@@ -251,6 +342,22 @@ var Posnet = /** @class */ (function (_super) {
             console.log('Posnet: Data send >>>>>>> : ', buffer.toString('utf-8'));
         }
         this.port.write(buffer);
+    };
+    /**
+     * @description Create promise to make module sync
+     * @param { Buffer } buffer
+     * @returns {Promise<void>}
+     */
+    Posnet.prototype.getPromise = function (data) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            if (!_this.port)
+                throw Error('Port is not open');
+            _this.port.write(data);
+            _this.port.drain(function () {
+                resolve(true);
+            });
+        });
     };
     /**
      * @description Close serial port

@@ -2,6 +2,7 @@ const { Posnet } = require('./dist/index');
 const { PosnetEndTransaction } = require('./dist/interfaces');
 const { PosnetChange } = require('./dist/interfaces');
 const {PosnetItem, PosnetPayment} = require('./dist/interfaces')
+const { SerialPort } = require('serialport');
 
 //     /dev/tty.usbmodem417696691
 
@@ -32,12 +33,30 @@ const change = new PosnetChange('cash', 50.00)
 
 const end = new PosnetEndTransaction(100.00, 150.00, 50.00)
 
+// SerialPort.list().then(ports => {
+//     console.log(ports);
+// })
+
 printer.open('/dev/tty.usbmodem417696691').then(() => {
     printer
-        .initTransaction()
-        .printItem(product)
-        .printItem(product1)
-        .printPayment(paymentCash)
-        .printChange(change)
-        .endTransaction(end)
+        // .initTransaction()
+        // .printItem(product)
+        // .printItem(product1)
+        // .printPayment(paymentCash)
+        // .printChange(change)
+        // .endTransaction(end)
+        .cancel()
+        .startForm()
+        .printText('asdfsadfsdfsdf')
+        .printDotLine()
+        .printBarcode('123123123')
+        .endForm()
+})
+
+printer.on('open', () => {
+    console.log('OPEN')
+})
+
+printer.on('posnet_error', (err) => {
+    console.log(err)
 })

@@ -8,6 +8,7 @@ export declare class Posnet extends EventEmitter {
     eventEmitter: EventEmitter;
     port?: SerialPort;
     transactionInited: boolean;
+    formStarted: boolean;
     constructor(debug?: boolean);
     /**
      * @description Open serial port, and start listening for data
@@ -15,6 +16,33 @@ export declare class Posnet extends EventEmitter {
      * @returns { Posnet }
      */
     open(port: string): Promise<boolean>;
+    /**
+     * @description Start form for non-fiscal print
+     * @returns { Posnet }
+     */
+    startForm(): Posnet;
+    /**
+     * @description non-fiscal form end
+     * @returns {Posnet}
+     */
+    endForm(): Posnet;
+    /**
+     * @description Print barcode. Form should be started
+     * @param barcode
+     * @returns
+     */
+    printBarcode(barcode: string): Posnet;
+    /**
+     * @description Print dots line. Form should be started
+     * @returns { Posnet }
+     */
+    printDotLine(): Posnet;
+    /**
+     * @description Print text. Form should be started
+     * @param {string} text
+     * @returns
+     */
+    printText(text: string): Posnet;
     /**
      * @description Print payment for transaction.
      * @param { PosnetPayment } payment
@@ -60,6 +88,12 @@ export declare class Posnet extends EventEmitter {
      * @param { Buffer } data
      */
     send(data: Buffer): void;
+    /**
+     * @description Create promise to make module sync
+     * @param { Buffer } buffer
+     * @returns {Promise<void>}
+     */
+    getPromise(data: Buffer): Promise<any>;
     /**
      * @description Close serial port
      * @returns { Posnet }

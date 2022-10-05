@@ -8,7 +8,7 @@ const { SerialPort } = require('serialport');
 
 const printer = new Posnet(true);
 const product = new PosnetItem({
-    name: 'Haircuting',
+    name: 'Sprzedaż towaru',
     vat: 2,
     price: 40.00,
     qty: 2

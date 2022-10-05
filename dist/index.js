@@ -18,6 +18,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Posnet = void 0;
 var events_1 = require("events");
 var serialport_1 = require("serialport");
+var encode = require('single-byte').encode;
 var dayjs = require("dayjs");
 var errors_1 = require("./errors");
 var utils_1 = require("./utils");
@@ -157,7 +158,8 @@ var Posnet = /** @class */ (function (_super) {
             Buffer.from([TAB]),
             Buffer.from("vt".concat(discount.vat), 'ascii'),
             Buffer.from([TAB]),
-            Buffer.from("na".concat(discount.name), 'ascii'),
+            encode('mazovia', "na".concat(discount.name)),
+            //Buffer.from(`na${discount.name}`, 'ascii'),
             Buffer.from([TAB]),
         ]));
         return this;
@@ -200,7 +202,8 @@ var Posnet = /** @class */ (function (_super) {
             Buffer.from('fl664', 'ascii'),
             Buffer.from([TAB]),
             Buffer.from('s1', 'ascii'),
-            Buffer.from(text, 'ascii'),
+            encode('mazovia', text),
+            //Buffer.from(text, 'ascii'),
             Buffer.from([LF]),
             Buffer.from([TAB]),
         ]));
@@ -292,7 +295,8 @@ var Posnet = /** @class */ (function (_super) {
         var bufferData = [
             Buffer.from('trline', 'ascii'),
             Buffer.from([TAB]),
-            Buffer.from("na".concat(item.name), 'ascii'),
+            encode('mazovia', "na".concat(item.name)),
+            //Buffer.from(`na${item.name}`, 'utf-8'),
             Buffer.from([TAB]),
             Buffer.from("vt".concat(item.vat), 'ascii'),
             Buffer.from([TAB]),

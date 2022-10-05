@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import { SerialPort } from "serialport";
+const { encode } = require('single-byte');
 import * as dayjs from 'dayjs'
 import { errors } from "./errors"
 import { crc16_ccitt } from "./utils"
@@ -162,7 +163,8 @@ export class Posnet extends EventEmitter {
                 Buffer.from([TAB]), 
                 Buffer.from(`vt${discount.vat}`, 'ascii'),
                 Buffer.from([TAB]), 
-                Buffer.from(`na${discount.name}`, 'ascii'),
+                encode('mazovia', `na${discount.name}`),
+                //Buffer.from(`na${discount.name}`, 'ascii'),
                 Buffer.from([TAB]), 
             ])
         );
@@ -211,7 +213,8 @@ export class Posnet extends EventEmitter {
                 Buffer.from('fl664', 'ascii'),
                 Buffer.from([TAB]),
                 Buffer.from('s1', 'ascii'),
-                Buffer.from(text, 'ascii'),
+                encode('mazovia', text),
+                //Buffer.from(text, 'ascii'),
                 Buffer.from([LF]),
                 Buffer.from([TAB]),
             ])
@@ -313,7 +316,8 @@ export class Posnet extends EventEmitter {
         const bufferData: Array<Buffer> = [
             Buffer.from('trline', 'ascii'),
             Buffer.from([TAB]),
-            Buffer.from(`na${item.name}`, 'ascii'),
+            encode('mazovia', `na${item.name}`),
+            //Buffer.from(`na${item.name}`, 'utf-8'),
             Buffer.from([TAB]),
             Buffer.from(`vt${item.vat}`, 'ascii'),
             Buffer.from([TAB]),

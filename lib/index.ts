@@ -302,9 +302,9 @@ export class Posnet extends EventEmitter {
      */
     printItem(item: PosnetItem): Posnet {
         if (!this.transactionInited) throw Error('Transaction is not inited');
-        if (!item.name) throw Error('Posnet: Item name is required');
-        if (!item.vat) throw Error('Posnet: Item vat is required');
-        if (!item.price) throw Error('Posnet: Item name is required');
+        if (item.name == undefined) throw Error('Posnet: Item name is required');
+        if (item.vat == undefined) throw Error('Posnet: Item vat is required');
+        if (item.price == undefined) throw Error('Posnet: Item name is required');
         if (item.discountType && !item.discountName) {
             throw Error('Posnet: Item discount name is required when discount type is set');
         }

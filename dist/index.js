@@ -280,11 +280,11 @@ var Posnet = /** @class */ (function (_super) {
     Posnet.prototype.printItem = function (item) {
         if (!this.transactionInited)
             throw Error('Transaction is not inited');
-        if (!item.name)
+        if (item.name == undefined)
             throw Error('Posnet: Item name is required');
-        if (!item.vat)
+        if (item.vat == undefined)
             throw Error('Posnet: Item vat is required');
-        if (!item.price)
+        if (item.price == undefined)
             throw Error('Posnet: Item name is required');
         if (item.discountType && !item.discountName) {
             throw Error('Posnet: Item discount name is required when discount type is set');
